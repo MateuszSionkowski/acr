@@ -1,0 +1,42 @@
+trigger: none  # Use schedules or manual triggers
+
+schedules:
+- cron: "0 1 * * *"  # Daily at 01:00 UTC
+  displayName: Daily Sync
+  branches:
+    include:
+    - main
+  always: true
+
+variables:
+  EXTERNAL_IMAGE: 'nginx'  # Replace with external repo name
+  EXTERNAL_REGISTRY: 'docker.io'
+  ACR_NAME: 'mirroracr'  # Replace with your ACR name
+  ACR_LOGIN_SERVER: 'mirroracr.azurecr.io'
+  LOCAL_IMAGE: 'nginx'  # Replace if renaming locally
+
+stages:
+- stage: MirrorImages
+  displayName: Mirror External Image Tags to ACR
+  jobs:
+  - job: Mirror
+    displayName: Mirror Tags
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+
+    - script: |
+        echo "Logging in to ACR..."
+        az acr login --name $(ACR_NAME)
+      displayName: 'Login to ACR'
+
+    - script: |
+        echo "Fetching tags from external registry..."
+        TAGS=$(curl -s https://registry.hub.docker.com/v2/repositories/$(EXTERNAL_IMAGE)/tags?page_size=100 | jq -r '.results[].name')
+        for TAG in $TAGS; do
+          echo "Processing tag: $TAG"
+          docker pull $(EXTERNAL_IMAGE):$TAG
+          docker tag $(EXTERNAL_IMAGE):$TAG $(ACR_LOGIN_SERVER)/$(LOCAL_IMAGE):$TAG
+          docker push $(ACR_LOGIN_SERVER)/$(LOCAL_IMAGE):$TAG
+        done
+      displayName: 'Pull, Tag, and Push Each Tag'
