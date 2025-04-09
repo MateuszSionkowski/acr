@@ -1,0 +1,37 @@
+{
+  "$schema": "https://aka.ms/azure-devops-yaml-schema",
+  "type": "pipeline",
+  "name": "Mirror External Images to ACR",
+  "description": "Mirrors images from an external container registry to Azure Container Registry (ACR), preserving tags.",
+  "repository": {
+    "type": "github",
+    "name": "MateuszSionkowski/acr",
+    "ref": "refs/heads/main",
+    "path": "/azure-pipeline.yml"
+  },
+  "projects": [
+    {
+      "name": "Container Image Mirror",
+      "description": "Pipeline project to mirror container images to ACR",
+      "pipelines": [
+        {
+          "name": "MirrorImagePipeline",
+          "description": "Sync container images with all tags into ACR",
+          "ymlPath": "/azure-pipeline.yml"
+        }
+      ]
+    }
+  ],
+  "parameters": {
+    "acrName": {
+      "type": "string",
+      "defaultValue": "mirroracr",
+      "description": "Azure Container Registry name"
+    },
+    "externalImage": {
+      "type": "string",
+      "defaultValue": "nginx",
+      "description": "Image to mirror from the external registry"
+    }
+  }
+}
