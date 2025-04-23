@@ -1,5 +1,5 @@
 # ACR Cache
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https://raw.githubusercontent.com/MateuszSionkowski/acr/main/main.bicep)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https://raw.githubusercontent.com/MateuszSionkowski/acr/main/main.json)
 
 
 # acr
