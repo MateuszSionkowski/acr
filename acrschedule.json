@@ -1,13 +1,6 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "metadata": {
-    "_generator": {
-      "name": "bicep",
-      "version": "0.34.44.8038",
-      "templateHash": "16803123873986711354"
-    }
-  },
   "parameters": {
     "location": {
       "type": "string",
@@ -28,6 +21,10 @@
     "externalRepoPathWithoutTag": {
       "type": "string",
       "defaultValue": "docker.io/library/nginx"
+    },
+    "currentDate": {
+      "type": "string",
+      "defaultValue": "[utcNow('yyyyMMdd')]"
     }
   },
   "resources": [
@@ -64,7 +61,7 @@
           "arguments": [
             {
               "name": "dateTag",
-              "value": "[utcNow('yyyyMMdd')]",
+              "value": "[parameters('currentDate')]",
               "isSecret": false
             }
           ],
