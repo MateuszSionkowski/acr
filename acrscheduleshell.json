@@ -3,50 +3,28 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "registryName": {
-      "type": "string",
-      "defaultValue": "myacrregistry"
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().location]"
-    },
-    "taskName": {
-      "type": "string",
-      "defaultValue": "mirror-latest-task"
+      "type": "string"
     },
     "externalImage": {
-      "type": "string",
-      "defaultValue": "nginx:latest"
+      "type": "string"
     },
     "acrRepo": {
-      "type": "string",
-      "defaultValue": "nginx"
+      "type": "string"
     },
-    "schedule": {
-      "type": "string",
-      "defaultValue": "0 3 * * *"
+    "taskName": {
+      "type": "string"
     }
+  },
+  "variables": {
+    "scriptBody": "[concat('docker pull ', parameters('externalImage'), '\\n', 'DIGEST=$(docker inspect --format=\\\"{{index .RepoDigests 0}}\\\" ', parameters('externalImage'), ')\\n', 'DIGEST=${DIGEST##*@}\\n', 'if docker pull ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), '@sha256:$DIGEST 2>/dev/null; then\\n', '  echo \\\"Image already exists in ACR. Skipping.\\\"\\n', 'else\\n', '  docker tag ', parameters('externalImage'), ' ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\\n', '  docker push ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\\n', 'fi')]",
+    "taskYaml": "[base64(concat('version: v1.1.0\\nsteps:\\n  - cmd: |\\n      ', variables('scriptBody')))]"
   },
   "resources": [
     {
-      "type": "Microsoft.ContainerRegistry/registries",
-      "apiVersion": "2023-01-01-preview",
-      "name": "[parameters('registryName')]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "Standard"
-      },
-      "properties": {
-        "adminUserEnabled": true
-      }
-    },
-    {
       "type": "Microsoft.ContainerRegistry/registries/tasks",
-      "apiVersion": "2023-01-01-preview",
+      "apiVersion": "2019-12-01-preview",
       "name": "[format('{0}/{1}', parameters('registryName'), parameters('taskName'))]",
-      "dependsOn": [
-        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
-      ],
+      "location": "[resourceGroup().location]",
       "properties": {
         "status": "Enabled",
         "platform": {
@@ -55,19 +33,14 @@
         "agentConfiguration": {
           "cpu": 2
         },
-        "statusUpdateTime": null,
         "step": {
-          "type": "EncodedTaskStep",
-          "contextPath": "https://dev.azure.com/fake/context", 
-          "contextAccessToken": "fake", 
-          "encodedTaskContent": "[base64(concat('version: v1.1.0\nsteps:\n  - cmd: |\n      docker pull ', parameters('externalImage'), '\n      DIGEST=$(docker inspect --format=\"{{index .RepoDigests 0}}\" ', parameters('externalImage'), ' | cut -d\"@\" -f2)\n      if docker pull ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), '@sha256:$DIGEST 2>/dev/null; then\n        echo \"Image already exists in ACR. Skipping.\"\n      else\n        docker tag ', parameters('externalImage'), ' ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\n        docker push ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\n      fi')]",
-          "values": []
+          "type": "EncodedTask",
+          "encodedTaskContent": "[variables('taskYaml')]"
         },
-        "trigger": {
-          "schedule": {
-            "status": "Enabled",
-            "cron": "[parameters('schedule')]"
-          }
+        "schedule": {
+          "status": "Enabled",
+          "triggerType": "Timer",
+          "value": "0 2 * * *"
         }
       }
     }
