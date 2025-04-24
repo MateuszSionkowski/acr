@@ -9,10 +9,6 @@
     }
   },
   "parameters": {
-    "resourceGroupName": {
-      "type": "string",
-      "defaultValue": "acrresourcegroup"
-    },
     "location": {
       "type": "string",
       "defaultValue": "eastus"
