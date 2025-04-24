@@ -2,25 +2,11 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "acrName": {
-      "type": "string"
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "eastus"
-    },
-    "tag": {
-      "type": "string",
-      "defaultValue": "latest"
-    },
-    "externalRepoPath": {
-      "type": "string",
-      "defaultValue": "docker.io/library/nginx"
-    },
-    "localRepoName": {
-      "type": "string",
-      "defaultValue": "nginx"
-    }
+    "acrName": { "type": "string" },
+    "location": { "type": "string", "defaultValue": "eastus" },
+    "tag": { "type": "string", "defaultValue": "latest" },
+    "externalRepoPath": { "type": "string", "defaultValue": "docker.io/library/nginx" },
+    "localRepoName": { "type": "string", "defaultValue": "nginx" }
   },
   "resources": [
     {
@@ -28,12 +14,8 @@
       "apiVersion": "2022-12-01",
       "name": "[parameters('acrName')]",
       "location": "[parameters('location')]",
-      "sku": {
-        "name": "Basic"
-      },
-      "properties": {
-        "adminUserEnabled": true
-      }
+      "sku": { "name": "Basic" },
+      "properties": { "adminUserEnabled": true }
     },
     {
       "type": "Microsoft.ContainerRegistry/registries/tasks",
@@ -45,22 +27,20 @@
       ],
       "properties": {
         "status": "Enabled",
-        "platform": {
-          "os": "Linux"
-        },
-        "agentConfiguration": {
-          "cpu": 2
-        },
+        "platform": { "os": "Linux" },
+        "agentConfiguration": { "cpu": 2 },
         "step": {
           "type": "Shell",
-          "contextPath": "https://github.com/MateuszSionkowski/acr",
-          "file": "task.sh",
-          "arguments": [
-            { "name": "ACR_NAME", "value": "[parameters('acrName')]" },
-            { "name": "TAG", "value": "[parameters('tag')]" },
-            { "name": "REPO", "value": "[parameters('externalRepoPath')]" },
-            { "name": "LOCAL_REPO_NAME", "value": "[parameters('localRepoName')]" }
-          ]
+          "script": "[concat('echo \"Pulling external image\"; ',\n
+                      'docker pull ', parameters('externalRepoPath'), ':', parameters('tag'), '; ',\n
+                      'SOURCE_DIGEST=$(docker inspect --format=\\'{{index .RepoDigests 0}}\\' ', parameters('externalRepoPath'), ':', parameters('tag'), ' | cut -d@ -f2); ',\n
+                      'LOCAL_IMAGE=', parameters('acrName'), '.azurecr.io/', parameters('localRepoName'), '; ',\n
+                      'EXISTING_DIGEST=$(docker manifest inspect $LOCAL_IMAGE:', parameters('tag'), ' 2>/dev/null | jq -r \\'{{.manifests[0].digest}}\\'); ',\n
+                      'if [ \"$SOURCE_DIGEST\" = \"$EXISTING_DIGEST\" ]; then echo \"No change in image\"; exit 0; fi; ',\n
+                      'DATE_TAG=$(date +%Y%m%d); ',\n
+                      'docker tag ', parameters('externalRepoPath'), ':', parameters('tag'), ' $LOCAL_IMAGE:', parameters('tag'), '; ',\n
+                      'docker tag ', parameters('externalRepoPath'), ':', parameters('tag'), ' $LOCAL_IMAGE:$DATE_TAG; ',\n
+                      'docker push $LOCAL_IMAGE:', parameters('tag'), '; docker push $LOCAL_IMAGE:$DATE_TAG;')]"
         },
         "trigger": {
           "type": "Schedule",
