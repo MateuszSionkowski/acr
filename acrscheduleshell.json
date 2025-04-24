@@ -17,18 +17,30 @@
     "taskName": {
       "type": "string",
       "defaultValue": "mirror-latest-task"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus"
     }
-  },
-  "variables": {
-    "scriptBody": "[concat('docker pull ', parameters('externalImage'), '\\n', 'DIGEST=$(docker inspect --format=\\\"{{index .RepoDigests 0}}\\\" ', parameters('externalImage'), ')\\n', 'DIGEST=${DIGEST##*@}\\n', 'if docker pull ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), '@sha256:$DIGEST 2>/dev/null; then\\n', '  echo \\\"Image already exists in ACR. Skipping.\\\"\\n', 'else\\n', '  docker tag ', parameters('externalImage'), ' ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\\n', '  docker push ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\\n', 'fi')]",
-    "taskYaml": "[base64(concat('version: v1.1.0\\nsteps:\\n  - cmd: |\\n      ', variables('scriptBody')))]"
   },
   "resources": [
     {
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2019-06-01-preview",
+      "location": "[parameters('location')]",
+      "name": "[parameters('registryName')]",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "adminUserEnabled": true
+      }
+    },
+    {
       "type": "Microsoft.ContainerRegistry/registries/tasks",
-      "apiVersion": "2019-12-01-preview",
+      "apiVersion": "2025-03-01-preview",  
+      "location": "[parameters('location')]",
       "name": "[format('{0}/{1}', parameters('registryName'), parameters('taskName'))]",
-      "location": "[resourceGroup().location]",
       "properties": {
         "status": "Enabled",
         "platform": {
@@ -48,5 +60,9 @@
         }
       }
     }
-  ]
+  ],
+  "variables": {
+    "scriptBody": "[concat('docker pull ', parameters('externalImage'), '\\n', 'DIGEST=$(docker inspect --format=\\\"{{index .RepoDigests 0}}\\\" ', parameters('externalImage'), ')\\n', 'DIGEST=${DIGEST##*@}\\n', 'if docker pull ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), '@sha256:$DIGEST 2>/dev/null; then\\n', '  echo \\\"Image already exists in ACR. Skipping.\\\"\\n', 'else\\n', '  docker tag ', parameters('externalImage'), ' ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\\n', '  docker push ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\\n', 'fi')]",
+    "taskYaml": "[base64(concat('version: v1.1.0\\nsteps:\\n  - cmd: |\\n      ', variables('scriptBody')))]"
+  }
 }
