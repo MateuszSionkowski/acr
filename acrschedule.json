@@ -28,6 +28,10 @@
     "externalRepoPathWithoutTag": {
       "type": "string",
       "defaultValue": "docker.io/library/nginx"
+    },
+    "currentDateTag": {
+      "type": "string",
+      "defaultValue": "[utcNow('yyyyMMdd')]"
     }
   },
   "resources": [
@@ -59,7 +63,7 @@
           "dockerFile": "/dev/null",
           "imageNames": [
             "[format('{0}:{1}', parameters('localRepoName'), parameters('sourceTag'))]",
-            "[format('{0}:{1}', parameters('localRepoName'), utcNow('yyyyMMdd'))]"
+            "[format('{0}:{1}', parameters('localRepoName'), parameters('currentDateTag'))]"
           ],
           "isPushEnabled": true,
           "arguments": []
