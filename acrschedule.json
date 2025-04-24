@@ -1,0 +1,94 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.34.44.8038",
+      "templateHash": "16803123873986711354"
+    }
+  },
+  "parameters": {
+    "resourceGroupName": {
+      "type": "string",
+      "defaultValue": "acrresourcegroup"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus"
+    },
+    "acrName": {
+      "type": "string",
+      "defaultValue": "cacheacr2222"
+    },
+    "localRepoName": {
+      "type": "string",
+      "defaultValue": "nginx"
+    },
+    "sourceTag": {
+      "type": "string",
+      "defaultValue": "latest"
+    },
+    "externalRepoPathWithoutTag": {
+      "type": "string",
+      "defaultValue": "docker.io/library/nginx"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2022-12-01",
+      "name": "[parameters('acrName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "adminUserEnabled": true
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/tasks",
+      "apiVersion": "2019-06-01-preview",
+      "name": "[concat(parameters('acrName'), '/pullImageTask')]",
+      "properties": {
+        "location": "[parameters('location')]",
+        "status": "Enabled",
+        "platform": {
+          "os": "Linux"
+        },
+        "step": {
+          "type": "Docker",
+          "contextPath": "/dev/null",
+          "dockerFile": "/dev/null",
+          "imageNames": [
+            "[format('{0}:{1}', parameters('repoName'), parameters('sourceTag'))]",
+            "[format('{0}:{1}', parameters('repoName'), "[utcNow('yyyyMMdd')]")]"
+          ],
+          "isPushEnabled": true,
+          "arguments": []
+        },
+        "trigger": {
+          "type": "Schedule",
+          "schedule": {
+            "type": "TimeBased",
+            "status": "Enabled",
+            "recurrence": {
+              "frequency": "Day",
+              "interval": 1
+            },
+            "time": "02:00"
+          }
+        },
+        "baseImageTrigger": {
+          "name": "PullExternalImage",
+          "updateTriggerEndpoint": "[format('{0}:{1}', parameters('externalRepoPathWithoutTag'), parameters('sourceTag'))]",
+          "updateTriggerPayload": "{}"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]"
+      ]
+    }
+  ]
+}
