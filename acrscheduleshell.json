@@ -31,16 +31,16 @@
         "agentConfiguration": { "cpu": 2 },
         "step": {
           "type": "Shell",
-          "script": "[concat('echo \"Pulling external image\"; ',\n
-                      'docker pull ', parameters('externalRepoPath'), ':', parameters('tag'), '; ',\n
-                      'SOURCE_DIGEST=$(docker inspect --format=\\'{{index .RepoDigests 0}}\\' ', parameters('externalRepoPath'), ':', parameters('tag'), ' | cut -d@ -f2); ',\n
-                      'LOCAL_IMAGE=', parameters('acrName'), '.azurecr.io/', parameters('localRepoName'), '; ',\n
-                      'EXISTING_DIGEST=$(docker manifest inspect $LOCAL_IMAGE:', parameters('tag'), ' 2>/dev/null | jq -r \\'{{.manifests[0].digest}}\\'); ',\n
-                      'if [ \"$SOURCE_DIGEST\" = \"$EXISTING_DIGEST\" ]; then echo \"No change in image\"; exit 0; fi; ',\n
-                      'DATE_TAG=$(date +%Y%m%d); ',\n
-                      'docker tag ', parameters('externalRepoPath'), ':', parameters('tag'), ' $LOCAL_IMAGE:', parameters('tag'), '; ',\n
-                      'docker tag ', parameters('externalRepoPath'), ':', parameters('tag'), ' $LOCAL_IMAGE:$DATE_TAG; ',\n
-                      'docker push $LOCAL_IMAGE:', parameters('tag'), '; docker push $LOCAL_IMAGE:$DATE_TAG;')]"
+          "script": "echo \"Pulling external image\" && \\\n\
+docker pull [parameters('externalRepoPath')]:[parameters('tag')] && \\\n\
+SOURCE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' [parameters('externalRepoPath')]:[parameters('tag')] | cut -d@ -f2) && \\\n\
+LOCAL_IMAGE=[parameters('acrName')].azurecr.io/[parameters('localRepoName')] && \\\n\
+EXISTING_DIGEST=$(docker manifest inspect $LOCAL_IMAGE:[parameters('tag')] 2>/dev/null | jq -r '{{.manifests[0].digest}}') && \\\n\
+if [ \"$SOURCE_DIGEST\" = \"$EXISTING_DIGEST\" ]; then echo \"No change in image\"; exit 0; fi && \\\n\
+DATE_TAG=$(date +%Y%m%d) && \\\n\
+docker tag [parameters('externalRepoPath')]:[parameters('tag')] $LOCAL_IMAGE:[parameters('tag')] && \\\n\
+docker tag [parameters('externalRepoPath')]:[parameters('tag')] $LOCAL_IMAGE:$DATE_TAG && \\\n\
+docker push $LOCAL_IMAGE:[parameters('tag')] && docker push $LOCAL_IMAGE:$DATE_TAG"
         },
         "trigger": {
           "type": "Schedule",
