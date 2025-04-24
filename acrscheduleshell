@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "acrName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus"
+    },
+    "tag": {
+      "type": "string",
+      "defaultValue": "latest"
+    },
+    "externalRepoPath": {
+      "type": "string",
+      "defaultValue": "docker.io/library/nginx"
+    },
+    "localRepoName": {
+      "type": "string",
+      "defaultValue": "nginx"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2022-12-01",
+      "name": "[parameters('acrName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "adminUserEnabled": true
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/tasks",
+      "apiVersion": "2019-06-01-preview",
+      "name": "[concat(parameters('acrName'), '/pullExternalImage')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]"
+      ],
+      "properties": {
+        "status": "Enabled",
+        "platform": {
+          "os": "Linux"
+        },
+        "agentConfiguration": {
+          "cpu": 2
+        },
+        "step": {
+          "type": "Shell",
+          "contextPath": "https://github.com/MateuszSionkowski/acr",
+          "file": "task.sh",
+          "arguments": [
+            { "name": "ACR_NAME", "value": "[parameters('acrName')]" },
+            { "name": "TAG", "value": "[parameters('tag')]" },
+            { "name": "REPO", "value": "[parameters('externalRepoPath')]" },
+            { "name": "LOCAL_REPO_NAME", "value": "[parameters('localRepoName')]" }
+          ]
+        },
+        "trigger": {
+          "type": "Schedule",
+          "schedule": {
+            "type": "TimeBased",
+            "status": "Enabled",
+            "recurrence": {
+              "frequency": "Day",
+              "interval": 1
+            },
+            "time": "02:00"
+          }
+        }
+      }
+    }
+  ]
+}
