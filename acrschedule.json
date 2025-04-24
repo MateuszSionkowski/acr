@@ -58,8 +58,8 @@
           "contextPath": "/dev/null",
           "dockerFile": "/dev/null",
           "imageNames": [
-            "[format('{0}:{1}', parameters('repoName'), parameters('sourceTag'))]",
-            "[format('{0}:{1}', parameters('repoName'), "[utcNow('yyyyMMdd')]")]"
+            "[format('{0}:{1}', parameters('localRepoName'), parameters('sourceTag'))]",
+            "[format('{0}:{1}', parameters('localRepoName'), utcNow('yyyyMMdd'))]"
           ],
           "isPushEnabled": true,
           "arguments": []
@@ -75,11 +75,6 @@
             },
             "time": "02:00"
           }
-        },
-        "baseImageTrigger": {
-          "name": "PullExternalImage",
-          "updateTriggerEndpoint": "[format('{0}:{1}', parameters('externalRepoPathWithoutTag'), parameters('sourceTag'))]",
-          "updateTriggerPayload": "{}"
         }
       },
       "dependsOn": [
