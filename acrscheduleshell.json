@@ -41,6 +41,9 @@
       "apiVersion": "2025-03-01-preview",  
       "location": "[parameters('location')]",
       "name": "[format('{0}/{1}', parameters('registryName'), parameters('taskName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
+      ],
       "properties": {
         "status": "Enabled",
         "platform": {
