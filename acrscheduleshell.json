@@ -65,7 +65,7 @@
     }
   ],
   "variables": {
-    "scriptBody": "[concat('docker pull ', parameters('externalImage'), ' && docker tag ', parameters('externalImage'), ' ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest && docker push ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest')]",    
+    "scriptBody": "[concat('docker pull ', parameters('externalImage'), ' && docker tag ', parameters('externalImage'), ' ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest && docker push ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest')]",
     "taskYaml": "[base64(concat('version: v1.1.0\\nsteps:\\n  - cmd: |\\n      ', variables('scriptBody')))]"
   }
 }
