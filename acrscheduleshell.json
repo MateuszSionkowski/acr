@@ -65,7 +65,7 @@
     }
   ],
   "variables": {
-    "scriptBody": "[concat('docker pull ', parameters('externalImage'), '\\n', 'DIGEST=$(docker inspect --format=\\\"{{index .RepoDigests 0}}\\\" ', parameters('externalImage'), ')\\n', 'DIGEST=${DIGEST##*@}\\n', 'if docker pull ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), '@sha256:$DIGEST 2>/dev/null; then\\n', '  echo \\\"Image already exists in ACR. Skipping.\\\"\\n', 'else\\n', '  docker tag ', parameters('externalImage'), ' ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\\n', '  docker push ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\\n', 'fi')]",
+    "scriptBody": "[concat('docker pull ', parameters('externalImage'), '\\n', 'if [ $? -eq 0 ]; then\\n', '  DIGEST=$(docker inspect --format=\\\"{{index .RepoDigests 0}}\\\" ', parameters('externalImage'), ')\\n', '  if [ -n \"$DIGEST\" ]; then\\n', '    DIGEST=${DIGEST##*@}\\n', '    if docker pull ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), '@sha256:$DIGEST 2>/dev/null; then\\n', '      echo \\\"Image already exists in ACR. Skipping.\\\"\\n', '    else\\n', '      docker tag ', parameters('externalImage'), ' ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\\n', '      docker push ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest\\n', '    fi\\n', '  else\\n', '    echo \\\"Error: Image digest not found.\\\"\\n', '  fi\\n', 'else\\n', '  echo \\\"Error: Failed to pull image.\\\"\\n', 'fi')]",
     "taskYaml": "[base64(concat('version: v1.1.0\\nsteps:\\n  - cmd: |\\n      ', variables('scriptBody')))]"
   }
 }
