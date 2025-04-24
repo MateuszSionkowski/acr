@@ -47,7 +47,7 @@
       "type": "Microsoft.ContainerRegistry/registries/tasks",
       "apiVersion": "2019-06-01-preview",
       "name": "[concat(parameters('acrName'), '/pullImageTask')]",
-      "location": "[parameters('location')]"
+      "location": "[parameters('location')]",
       "properties": {
         "status": "Enabled",
         "platform": {
