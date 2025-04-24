@@ -67,9 +67,8 @@
             "value": "[utcNow('yyyyMMdd')]",
             "isSecret": false
           }
-        ]
-          "isPushEnabled": true,
-          "arguments": []
+        ],
+          "isPushEnabled": true
         },
         "trigger": {
           "type": "Schedule",
