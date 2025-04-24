@@ -3,16 +3,20 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "registryName": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "myacrregistry"
     },
     "externalImage": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "docker.io/library/nginx:latest"
     },
     "acrRepo": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "nginx"
     },
     "taskName": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "mirror-latest-task"
     }
   },
   "variables": {
