@@ -57,17 +57,19 @@
           "type": "Docker",
           "contextPath": "/dev/null",
           "dockerFile": "/dev/null",
-          "imageNames": [
-            "[format('{0}:{1}', parameters('localRepoName'), parameters('sourceTag'))]",
-            "[format('{0}:%s', parameters('localRepoName'))]"
-          ],
+        "imageNames": [
+          "[format('{0}:{1}', parameters('localRepoName'), parameters('sourceTag'))]",
+          "[format('{0}:{{{1}}}', parameters('localRepoName'), 'dateTag')]"
+        ],
+        "arguments": [
+          {
+            "name": "dateTag",
+            "value": "[utcNow('yyyyMMdd')]",
+            "isSecret": false
+          }
+        ]
           "isPushEnabled": true,
-          "arguments": [
-            {
-              "name": "CURRENT_DATE",
-              "value": "$(date +%Y%m%d)"
-            }
-          ]
+          "arguments": []
         },
         "trigger": {
           "type": "Schedule",
