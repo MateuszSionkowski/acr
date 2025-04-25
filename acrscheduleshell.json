@@ -4,7 +4,7 @@
   "parameters": {
     "acrName": {
       "type": "string",
-      "defaultValue": "myACR",
+      "defaultValue": "mirroracr",
       "metadata": {
         "description": "Name of the Azure Container Registry"
       }
@@ -18,14 +18,33 @@
     },
     "taskName": {
       "type": "string",
-      "defaultValue": "nginx-task",
+      "defaultValue": "mirror-task",
       "metadata": {
         "description": "Name of the ACR Task"
       }
     },
-    "taskContent": {
+      "sourceRepo": {
       "type": "string",
-      "defaultValue": "version: v1.1.0\nsteps:\n  - cmd: docker pull nginx:latest\n  - cmd: docker tag nginx:latest [acrName].azurecr.io/nginx:latest\n  - push: [[acrName].azurecr.io/nginx:latest]",
+      "defaultValue": "docker.io/library/nginx",
+      "metadata": {
+        "description": "Path to the external repository"
+      }
+      "tag": {
+      "type": "string",
+      "defaultValue": "latest",
+      "metadata": {
+        "description": "Tag to be pulled from external repository"
+      }
+      "localRepoName": {
+      "type": "string",
+      "defaultValue": "nginx",
+      "metadata": {
+        "description": "Name of the local repository"
+      }
+    },
+    "doNotChangeTheTaskContent": {
+      "type": "string",
+      "defaultValue": "version: v1.1.0\nsteps:\n  - cmd: docker pull [sourceRepo]:[tag]\n  - cmd: docker tag [localRepoName]:[tag] [acrName].azurecr.io/[localRepoName]:[tag]\n  - push: [[acrName].azurecr.io/[localRepoName]:[tag]",
       "metadata": {
         "description": "The plain text definition of the ACR Task"
       }
@@ -61,7 +80,7 @@
         },
         "status": "Enabled",
         "step": {
-          "encodedTaskContent": "[base64(replace(parameters('taskContent'), '[acrName]', parameters('acrName')))]",
+          "encodedTaskContent": "[base64(replace(replace(replace(replace(parameters('doNotChangeTheTaskContent'), '[acrName]', parameters('acrName')), '[tag]', parameters('tag')), 'localRepoName', parameters('localRepoName')), 'sourceRepo', parameters('sourceRepo')))]",
           "type": "EncodedTask",
           "values": []
         },
