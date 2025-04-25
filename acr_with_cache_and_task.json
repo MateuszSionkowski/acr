@@ -1,0 +1,164 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "tenantId": {
+      "type": "string",
+      "defaultValue": "9882c17f-9662-42ad-bdb0-07923b42850f"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "defaultValue": "cachekv"
+    },
+    "acrName": {
+      "type": "string",
+      "defaultValue": "mirroracr"
+    },
+    "loginServer": {
+      "type": "string",
+      "defaultValue": "docker.io"
+    },
+    "repoName": {
+      "type": "string",
+      "defaultValue": "nginx"
+    },
+    "sourceRepo": {
+      "type": "string",
+      "defaultValue": "docker.io/library/nginx"
+    }
+    "tag": {
+      "type": "string",
+      "defaultValue": "latest"
+    }
+    "taskName": {
+      "type": "string",
+      "defaultValue": "mirror-task"
+    },
+    "doNotChangeTheTaskContent": {
+     "type": "string",
+     "defaultValue": "version: v1.1.0\nsteps:\n  - cmd: docker pull [sourceRepo]:[tag]\n  - cmd: docker tag [localRepoName]:[tag] [acrName].azurecr.io/[localRepoName]:[tag]\n  - push: [[acrName].azurecr.io/[localRepoName]:[tag]]",
+     "metadata": {
+        "description": "The plain text definition of the ACR Task"
+     }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2022-07-01",
+      "name": "[parameters('keyVaultName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "tenantId": "[parameters('tenantId')]",
+        "enableRbacAuthorization": true,
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2022-12-01",
+      "name": "[parameters('acrName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "adminUserEnabled": true
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/credentialSets",
+      "apiVersion": "2025-04-01",
+      "name": "[format('{0}/{1}', parameters('acrName'), 'credentialset')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "loginServer": "[parameters('loginServer')]",
+        "authCredentials": [
+          {
+            "name": "credential1",
+            "usernameSecretIdentifier": "[format('https://{0}.vault.azure.net/secrets/repousername', parameters('keyVaultName'))]",
+            "passwordSecretIdentifier": "[format('https://{0}.vault.azure.net/secrets/repopassword', parameters('keyVaultName'))]"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/cacheRules",
+      "apiVersion": "2025-04-01",
+      "name": "[format('{0}/{1}', parameters('acrName'), parameters('repoName'))]",
+      "properties": {
+        "targetRepository": "[parameters('repoName')]",
+        "sourceRepository": "[parameters('sourceRepo')]",
+        "credentialSetResourceId": "[resourceId('Microsoft.ContainerRegistry/registries/credentialSets', parameters('acrName'), 'credentialset')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]",
+        "[resourceId('Microsoft.ContainerRegistry/registries/credentialSets', parameters('acrName'), 'credentialset')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/tasks",
+      "apiVersion": "2019-06-01-preview",
+      "name": "[concat(parameters('acrName'), '/', parameters('taskName'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]"
+      ],
+      "properties": {
+        "agentConfiguration": {
+          "cpu": 2
+        },
+        "isSystemTask": false,
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        "status": "Enabled",
+        "step": {
+          "encodedTaskContent": "[base64(replace(replace(replace(replace(parameters('doNotChangeTheTaskContent'), '[acrName]', parameters('acrName')), '[tag]', parameters('tag')), '[repoName]', parameters('repoName')), '[sourceRepo]', parameters('sourceRepo')))]",
+          "type": "EncodedTask",
+          "values": []
+        },
+        "timeout": 3600,
+        "trigger": {
+          "baseImageTrigger": {
+            "baseImageTriggerType": "Runtime",
+            "name": "defaultBaseimageTriggerName",
+            "status": "Enabled",
+            "updateTriggerPayloadType": "Default"
+          },
+          "timerTriggers": [
+            {
+              "name": "t1",
+              "schedule": "0 2 * * *",
+              "status": "Enabled"
+            }
+          ]
+        }
+      }
+    }
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('keyVaultName'))]",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')), resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
+        "principalId": "[reference(resourceId('Microsoft.ContainerRegistry/registries/credentialSets', parameters('acrName'), 'credentialset'), '2025-04-01', 'full').identity.principalId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]",
+        "[resourceId('Microsoft.ContainerRegistry/registries/credentialSets', parameters('acrName'), 'credentialset')]",
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+      ]
+    }
+  ]
+}
