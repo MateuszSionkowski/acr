@@ -2,70 +2,86 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "registryName": {
+    "acrName": {
       "type": "string",
-      "defaultValue": "myacrregistry"
+      "defaultValue": "myACR",
+      "metadata": {
+        "description": "Name of the Azure Container Registry"
+      }
     },
-    "externalImage": {
+    "acrLocation": {
       "type": "string",
-      "defaultValue": "docker.io/library/nginx:latest"
-    },
-    "acrRepo": {
-      "type": "string",
-      "defaultValue": "nginx"
+      "defaultValue": "eastus",
+      "metadata": {
+        "description": "Location of the Azure Container Registry"
+      }
     },
     "taskName": {
       "type": "string",
-      "defaultValue": "mirror-latest-task"
+      "defaultValue": "nginx-task",
+      "metadata": {
+        "description": "Name of the ACR Task"
+      }
     },
-    "location": {
+    "taskContent": {
       "type": "string",
-      "defaultValue": "eastus"
+      "defaultValue": "version: v1.1.0\nsteps:\n  - cmd: docker pull nginx:latest\n  - cmd: docker tag nginx:latest [acrName].azurecr.io/nginx:latest\n  - push: [[acrName].azurecr.io/nginx:latest]",
+      "metadata": {
+        "description": "The plain text definition of the ACR Task"
+      }
     }
   },
   "resources": [
     {
       "type": "Microsoft.ContainerRegistry/registries",
-      "apiVersion": "2025-04-01",
-      "location": "[parameters('location')]",
-      "name": "[parameters('registryName')]",
+      "apiVersion": "2021-09-01",
+      "name": "[parameters('acrName')]",
+      "location": "[parameters('acrLocation')]",
       "sku": {
         "name": "Basic"
       },
-      "properties": {
-        "adminUserEnabled": true
-      }
+      "properties": {}
     },
     {
       "type": "Microsoft.ContainerRegistry/registries/tasks",
-      "apiVersion": "2025-03-01-preview",  
-      "location": "[parameters('location')]",
-      "name": "[format('{0}/{1}', parameters('registryName'), parameters('taskName'))]",
+      "apiVersion": "2019-06-01-preview",
+      "name": "[concat(parameters('acrName'), '/', parameters('taskName'))]",
+      "location": "[parameters('acrLocation')]",
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]"
       ],
       "properties": {
-        "status": "Enabled",
-        "platform": {
-          "os": "Linux"
-        },
         "agentConfiguration": {
           "cpu": 2
         },
-        "step": {
-          "type": "EncodedTask",
-          "encodedTaskContent": "[variables('taskYaml')]"
+        "isSystemTask": false,
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
         },
-        "schedule": {
-          "status": "Enabled",
-          "triggerType": "Timer",
-          "value": "0 2 * * *"
+        "status": "Enabled",
+        "step": {
+          "encodedTaskContent": "[base64(parameters('taskContent'))]",
+          "type": "EncodedTask",
+          "values": []
+        },
+        "timeout": 3600,
+        "trigger": {
+          "baseImageTrigger": {
+            "baseImageTriggerType": "Runtime",
+            "name": "defaultBaseimageTriggerName",
+            "status": "Enabled",
+            "updateTriggerPayloadType": "Default"
+          },
+          "timerTriggers": [
+            {
+              "name": "t1",
+              "schedule": "0 2 * * *",
+              "status": "Enabled"
+            }
+          ]
         }
       }
     }
-  ],
-  "variables": {
-    "scriptBody": "[concat('docker pull ', parameters('externalImage'), ' && docker tag ', parameters('externalImage'), ' ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest && docker push ', parameters('registryName'), '.azurecr.io/', parameters('acrRepo'), ':latest')]",
-    "taskYaml": "[base64(concat('version: v1.1.0\\nsteps:\\n  - cmd: |\\n      ', variables('scriptBody')))]"
-  }
+  ]
 }
