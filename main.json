@@ -6,10 +6,6 @@
       "type": "string",
       "defaultValue": "9882c17f-9662-42ad-bdb0-07923b42850f"
     },
-    "location": {
-      "type": "string",
-      "defaultValue": "westeurope"
-    },
     "keyVaultName": {
       "type": "string",
       "defaultValue": "cachekv"
@@ -36,7 +32,7 @@
       "type": "Microsoft.KeyVault/vaults",
       "apiVersion": "2022-07-01",
       "name": "[parameters('keyVaultName')]",
-      "location": "[parameters('location')]",
+      "location": "[deployment().location]",
       "properties": {
         "tenantId": "[parameters('tenantId')]",
         "enableRbacAuthorization": true,
@@ -50,7 +46,7 @@
       "type": "Microsoft.ContainerRegistry/registries",
       "apiVersion": "2022-12-01",
       "name": "[parameters('acrName')]",
-      "location": "[parameters('location')]",
+      "location": "[deployment().location]",
       "sku": {
         "name": "Basic"
       },
