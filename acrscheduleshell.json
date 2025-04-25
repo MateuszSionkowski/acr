@@ -23,19 +23,21 @@
         "description": "Name of the ACR Task"
       }
     },
-      "sourceRepo": {
+    "sourceRepo": {
       "type": "string",
       "defaultValue": "docker.io/library/nginx",
       "metadata": {
         "description": "Path to the external repository"
       }
-      "tag": {
+    },
+    "tag": {
       "type": "string",
       "defaultValue": "latest",
       "metadata": {
         "description": "Tag to be pulled from external repository"
       }
-      "localRepoName": {
+    },
+    "localRepoName": {
       "type": "string",
       "defaultValue": "nginx",
       "metadata": {
@@ -44,7 +46,7 @@
     },
     "doNotChangeTheTaskContent": {
       "type": "string",
-      "defaultValue": "version: v1.1.0\nsteps:\n  - cmd: docker pull [sourceRepo]:[tag]\n  - cmd: docker tag [localRepoName]:[tag] [acrName].azurecr.io/[localRepoName]:[tag]\n  - push: [[acrName].azurecr.io/[localRepoName]:[tag]",
+      "defaultValue": "version: v1.1.0\nsteps:\n  - cmd: docker pull [sourceRepo]:[tag]\n  - cmd: docker tag [localRepoName]:[tag] [acrName].azurecr.io/[localRepoName]:[tag]\n  - push: [[acrName].azurecr.io/[localRepoName]:[tag]]",
       "metadata": {
         "description": "The plain text definition of the ACR Task"
       }
@@ -80,7 +82,7 @@
         },
         "status": "Enabled",
         "step": {
-          "encodedTaskContent": "[base64(replace(replace(replace(replace(parameters('doNotChangeTheTaskContent'), '[acrName]', parameters('acrName')), '[tag]', parameters('tag')), 'localRepoName', parameters('localRepoName')), 'sourceRepo', parameters('sourceRepo')))]",
+          "encodedTaskContent": "[base64(replace(replace(replace(replace(parameters('doNotChangeTheTaskContent'), '[acrName]', parameters('acrName')), '[tag]', parameters('tag')), '[localRepoName]', parameters('localRepoName')), '[sourceRepo]', parameters('sourceRepo')))]",
           "type": "EncodedTask",
           "values": []
         },
