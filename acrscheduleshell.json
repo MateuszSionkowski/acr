@@ -61,7 +61,7 @@
         },
         "status": "Enabled",
         "step": {
-          "encodedTaskContent": "[base64(parameters('taskContent'))]",
+          "encodedTaskContent": "[base64(replace(parameters('taskContent'), '[acrName]', parameters('acrName')))]",
           "type": "EncodedTask",
           "values": []
         },
