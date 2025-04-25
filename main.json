@@ -19,7 +19,7 @@
     },
     "location": {
       "type": "string",
-      "defaultValue": "eastus"
+      "defaultValue": "westeurope"
     },
     "keyVaultName": {
       "type": "string",
