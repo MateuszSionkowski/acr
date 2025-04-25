@@ -1,8 +1,11 @@
-# ACR CACHE
+# ACR with CACHE
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMateuszSionkowski%2Facr%2Fmain%2Fmain.json)
 
-# ACR Schedule Shell
+# ACR with Schedule Task
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMateuszSionkowski%2Facr%2Fmain%2Facrscheduleshell.json)
+
+# ACR with Cache and a Schedule Task
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMateuszSionkowski%2Facr%2Fmain%2Facr_with_cache_and_task.json)
 
 
 # ACR Schedule
