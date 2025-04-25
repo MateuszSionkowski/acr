@@ -9,13 +9,6 @@
         "description": "Name of the Azure Container Registry"
       }
     },
-    "acrLocation": {
-      "type": "string",
-      "defaultValue": "westeurope",
-      "metadata": {
-        "description": "Location of the Azure Container Registry"
-      }
-    },
     "taskName": {
       "type": "string",
       "defaultValue": "mirror-task",
@@ -57,7 +50,7 @@
       "type": "Microsoft.ContainerRegistry/registries",
       "apiVersion": "2021-09-01",
       "name": "[parameters('acrName')]",
-      "location": "[parameters('acrLocation')]",
+      "location": "[resourceGroup().location]",
       "sku": {
         "name": "Basic"
       },
@@ -67,7 +60,7 @@
       "type": "Microsoft.ContainerRegistry/registries/tasks",
       "apiVersion": "2019-06-01-preview",
       "name": "[concat(parameters('acrName'), '/', parameters('taskName'))]",
-      "location": "[parameters('acrLocation')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]"
       ],
