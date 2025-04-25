@@ -1,21 +1,11 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "metadata": {
-    "_generator": {
-      "name": "bicep",
-      "version": "0.34.44.8038",
-      "templateHash": "16803123873986711354"
-    }
   },
   "parameters": {
     "tenantId": {
       "type": "string",
       "defaultValue": "9882c17f-9662-42ad-bdb0-07923b42850f"
-    },
-    "resourceGroupName": {
-      "type": "string",
-      "defaultValue": "acrresourcegroup"
     },
     "location": {
       "type": "string",
