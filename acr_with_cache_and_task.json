@@ -25,11 +25,11 @@
     "sourceRepo": {
       "type": "string",
       "defaultValue": "docker.io/library/nginx"
-    }
+    },
     "tag": {
       "type": "string",
       "defaultValue": "latest"
-    }
+    },
     "taskName": {
       "type": "string",
       "defaultValue": "mirror-task"
@@ -144,7 +144,7 @@
           ]
         }
       }
-    }
+    },
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2020-04-01-preview",
